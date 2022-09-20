@@ -6,10 +6,13 @@ const apiSecret = process.env.VONAGE_API_SECRET;
 
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
+const cors = require("cors");
 const path = require("path");
 const express = require("express");
+
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 let db = null;
 const dbFilePath = path.join(__dirname, "message.db");
@@ -41,11 +44,9 @@ initializeServer();
 //validate the request body
 const checkRequestBody = (request, response, next) => {
   try {
-    const { to, text } = request.body;
-    if (!to) {
-      throw new Error("enter reciepient number");
-    } else if (!text) {
-      throw new Error("message is required");
+    const { to, text, name, otp } = request.body;
+    if (!to || !text || !name || !otp) {
+      throw new Error("enter all the required details");
     } else if (to.length != "12") {
       throw new Error("A valid phone number is required");
     } else if (to.slice(0, 1) == "+") {

@@ -94,3 +94,15 @@ app.get("/contacts", async (request, response) => {
     response.send("Something Went Wrong");
   }
 });
+
+app.get("/otps", async (request, response) => {
+  try {
+    const query = `select * from otp`;
+    const otps = await db.all(query);
+    response.status(200);
+    response.send(otps);
+  } catch (error) {
+    response.status(500);
+    response.send("Something Went Wrong");
+  }
+});

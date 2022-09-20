@@ -34,15 +34,23 @@ const initializeServer = async () => {
       console.log(`server is running at ${port}`);
     });
   } catch (error) {
-    console.log(`something went wrong error is ${error.message}`);
+    console.log(`Internal Server Error error is ${error.message}`);
     process.exit(1);
   }
 };
 
 initializeServer();
 
-//validate the request body
-const checkRequestBody = (request, response, next) => {
+const getErrorMessage = (msg) => {
+  return { err_msg: msg };
+};
+
+const getSuccessMessage = (msg) => {
+  return { msg };
+};
+
+//validate the Otp post body
+const checkOtpBody = (request, response, next) => {
   try {
     const { to, text, firstName, lastName, otp } = request.body;
     if (!to || !text || !firstName || !lastName || !otp) {
@@ -55,12 +63,30 @@ const checkRequestBody = (request, response, next) => {
     next();
   } catch (err) {
     response.status(400);
-    response.send({ error: err.message });
+    response.send(getErrorMessage(err.message));
+  }
+};
+
+//validate the contact post body
+const checkContactBody = (request, response, next) => {
+  try {
+    const { firstName, lastName, phone } = request.body;
+    if (!phone || !firstName || !lastName) {
+      throw new Error("enter all the required details");
+    } else if (phone.length != "12") {
+      throw new Error("A valid phone number is required");
+    } else if (phone.slice(0, 1) == "+") {
+      throw new Error("country code is not required");
+    }
+    next();
+  } catch (err) {
+    response.status(400);
+    response.send(getErrorMessage(err.message));
   }
 };
 
 //send otp API
-app.post("/send-otp", checkRequestBody, async (request, response) => {
+app.post("/send-otp", checkOtpBody, async (request, response) => {
   try {
     const from = "sami";
     const { firstName, lastName, to, text, otp } = request.body;
@@ -76,11 +102,11 @@ app.post("/send-otp", checkRequestBody, async (request, response) => {
     });
 
     response.status(200);
-    response.send({ msg: "OTP is sucessfully sent" });
+    response.send(getSuccessMessage("OTP is sucessfully sent"));
   } catch (error) {
     console.log(error.message);
     response.status(500);
-    response.send({ err: "unexpected error has occured" });
+    response.send(getErrorMessage("unexpected error has occured"));
   }
 });
 
@@ -93,7 +119,7 @@ app.get("/contacts", async (request, response) => {
     response.send(contacts);
   } catch (error) {
     response.status(500);
-    response.send("Something Went Wrong");
+    response.send(getErrorMessage("Internal Server Error"));
   }
 });
 
@@ -106,10 +132,11 @@ app.get("/otps", async (request, response) => {
     response.send(otps);
   } catch (error) {
     response.status(500);
-    response.send("Something Went Wrong");
+    response.send(getErrorMessage("Internal Server Error"));
   }
 });
 
+//fetch a contact with id
 app.get("/contact/:id/", async (request, response) => {
   try {
     const { id } = request.params;
@@ -119,6 +146,20 @@ app.get("/contact/:id/", async (request, response) => {
     response.send(result);
   } catch (error) {
     response.status(404);
-    response.send("requested resource not found");
+    response.send(getErrorMessage("requested resource not found"));
+  }
+});
+
+//create a contact
+app.post("/contact", checkContactBody, async (request, response) => {
+  try {
+    const { firstName, lastName, phone } = request.body;
+    const query = `insert into contact(first_name,last_name,phone) values("${firstName}","${lastName}","${phone}")`;
+    await db.run(query);
+    response.status(200);
+    response.send(getSuccessMessage("contact is sucessfully created"));
+  } catch (error) {
+    response.status(500);
+    response.send(getErrorMessage("Internal Server Error"));
   }
 });

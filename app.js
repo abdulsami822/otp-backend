@@ -44,8 +44,8 @@ initializeServer();
 //validate the request body
 const checkRequestBody = (request, response, next) => {
   try {
-    const { to, text, name, otp } = request.body;
-    if (!to || !text || !name || !otp) {
+    const { to, text, firstName, lastName, otp } = request.body;
+    if (!to || !text || !firstName || !lastName || !otp) {
       throw new Error("enter all the required details");
     } else if (to.length != "12") {
       throw new Error("A valid phone number is required");
@@ -63,14 +63,14 @@ const checkRequestBody = (request, response, next) => {
 app.post("/send-otp", checkRequestBody, async (request, response) => {
   try {
     const from = "sami";
-    const { name, to, text, otp } = request.body;
+    const { firstName, lastName, to, text, otp } = request.body;
 
     vonage.message.sendSms(from, to, text, async (err, response) => {
       if (err) {
         console.log(err);
       } else {
         //store otp in db
-        const query = `INSERT INTO otp(name,time,otp) VALUES ("${name}",CURRENT_TIMESTAMP,${otp})`;
+        const query = `INSERT INTO otp(first_name,last_name,time,otp) VALUES ("${firstName}","${lastName}",CURRENT_TIMESTAMP,${otp})`;
         await db.run(query);
       }
     });
@@ -84,6 +84,7 @@ app.post("/send-otp", checkRequestBody, async (request, response) => {
   }
 });
 
+//fetch all contacts API
 app.get("/contacts", async (request, response) => {
   try {
     const query = `select * from contact`;
@@ -96,6 +97,7 @@ app.get("/contacts", async (request, response) => {
   }
 });
 
+//fetch all OTPs API
 app.get("/otps", async (request, response) => {
   try {
     const query = `select * from otp`;

@@ -1,15 +1,18 @@
 require("dotenv").config();
-const express = require("express");
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const serviceSid = process.env.TWILIO_SERVICE_SID;
 const port = process.env.PORT;
+const apiKey = process.env.VONAGE_API_KEY;
+const apiSecret = process.env.VONAGE_API_SECRET;
 
-const client = require("twilio")(accountSid, authToken);
-
+const express = require("express");
 const app = express();
 app.use(express.json());
+
+const Vonage = require("@vonage/server-sdk");
+const vonage = new Vonage({
+  apiKey,
+  apiSecret,
+});
 
 //start server
 const initializeServer = () => {
@@ -25,14 +28,18 @@ const initializeServer = () => {
 
 initializeServer();
 
-//validate the phone number from request
+//validate the request body
 const checkRequestBody = (request, response, next) => {
   try {
-    const { to } = request.body;
-    if (to.length != "13") {
+    const { to, text } = request.body;
+    if (!to) {
+      throw new Error("enter reciepient number");
+    } else if (!text) {
+      throw new Error("message is required");
+    } else if (to.length != "12") {
       throw new Error("A valid phone number is required");
-    } else if (to.slice(0, 1) != "+") {
-      throw new Error("country code is required");
+    } else if (to.slice(0, 1) == "+") {
+      throw new Error("country code is not required");
     }
     next();
   } catch (err) {
@@ -44,17 +51,19 @@ const checkRequestBody = (request, response, next) => {
 //send otp API
 app.post("/send-otp", checkRequestBody, async (request, response) => {
   try {
-    const { to } = request.body;
-    const otpService = client.verify.v2.services(serviceSid);
-    const result = await otpService.verifications.create({
-      to,
-      channel: "sms",
+    const from = "sami";
+    const { to, text } = request.body;
+
+    vonage.message.sendSms(from, to, text, (err, response) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(response);
+      }
     });
 
     response.status(200);
     response.send({ msg: "OTP is sucessfully sent" });
-    // .verifications.create({ to, channel: "sms" })
-    // .then((verification) => console.log(verification.sid));
   } catch (error) {
     console.log(error.message);
     response.status(500);

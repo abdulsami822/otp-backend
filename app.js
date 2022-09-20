@@ -109,3 +109,16 @@ app.get("/otps", async (request, response) => {
     response.send("Something Went Wrong");
   }
 });
+
+app.get("/contact/:id/", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const query = `select * from contact where id = ${id}`;
+    const result = await db.get(query);
+    response.status(200);
+    response.send(result);
+  } catch (error) {
+    response.status(404);
+    response.send("requested resource not found");
+  }
+});

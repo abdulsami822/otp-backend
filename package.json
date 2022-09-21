@@ -1,12 +1,15 @@
 {
   "name": "otp-backend",
   "version": "1.0.0",
-  "description": "backend for twilio verify service",
+  "description": "backend for otp service",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [
+    "heroku"
+  ],
   "author": "abdulsami",
   "license": "ISC",
   "dependencies": {
@@ -17,5 +20,9 @@
     "path": "^0.12.7",
     "sqlite": "^4.1.2",
     "sqlite3": "^5.1.1"
+  },
+  "engines": {
+    "node": "12.18.3",
+    "npm": "6.14.13"
   }
 }

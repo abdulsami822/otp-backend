@@ -140,7 +140,7 @@ app.get("/otps", async (request, response) => {
   }
 });
 
-//fetch a contact with id
+//fetch a contact with requested id
 app.get("/contact/:id/", async (request, response) => {
   try {
     const { id } = request.params;
